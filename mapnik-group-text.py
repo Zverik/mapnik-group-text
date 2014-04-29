@@ -5,8 +5,8 @@ from lxml import etree
 
 parser = argparse.ArgumentParser(description='Group letters in mapnik-generated SVG')
 parser.add_argument('inp', type=argparse.FileType('r'), metavar='input', help='input svg file ("-" for stdin)')
-parser.add_argument('output', type=argparse.FileType('w'), help='output svg file (can be the same as input)', nargs='?', default=sys.stdout)
-parser.add_argument('-d', dest='dmax', type=int, help='maximum distance between glyph start points in a word', default='30')
+parser.add_argument('output', type=argparse.FileType('w'), help='output svg file (can be the same as input, default is stdout)', nargs='?', default=sys.stdout)
+parser.add_argument('-d', dest='dmax', type=int, help='maximum distance between glyph start points in a word (default=30)', default='30')
 parser.add_argument('-v', dest='verbose', action='store_true', help='display debug information')
 options = parser.parse_args()
 
