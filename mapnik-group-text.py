@@ -5,13 +5,15 @@ from lxml import etree
 
 parser = argparse.ArgumentParser(description='Group letters in mapnik-generated SVG')
 parser.add_argument('inp', type=argparse.FileType('r'), metavar='input', help='input svg file ("-" for stdin)')
-parser.add_argument('output', type=argparse.FileType('w'), help='output svg file (can be the same as input, default is stdout)', nargs='?', default=sys.stdout)
+parser.add_argument('output', help='output svg file (can be the same as input, default is stdout)', nargs='?', default='-')
 parser.add_argument('-d', dest='dmax', type=int, help='maximum distance between glyph start points in a word (default=30)', default='30')
 parser.add_argument('-s', dest='single', action='store_true', help='do not attempt detecting multi-line labels')
+parser.add_argument('-g', dest='group', action='store_false', help='vector data is not grouped', default=True)
 parser.add_argument('-v', dest='verbose', action='store_true', help='display debug information')
 options = parser.parse_args()
 
 tree = etree.parse(options.inp)
+options.inp.close()
 nsm = {'svg': 'http://www.w3.org/2000/svg', 'xlink': 'http://www.w3.org/1999/xlink'}
 xlhref = '{%s}href' % nsm['xlink']
 sign = lambda x: (1, -1)[x<0]
@@ -24,7 +26,8 @@ for sympath in tree.findall('svg:defs/svg:g/svg:symbol/svg:path', nsm):
 spaces = set(spaces)
 
 # Find the first letter
-glyph = tree.find('svg:g/svg:g/svg:use', nsm)
+search = 'svg:g/svg:g/svg:use' if options.group else 'svg:g/svg:use'
+glyph = tree.find(search, nsm)
 while glyph is not None:
 	# Find word starting with letter glyph
 	curg = glyph.iterancestors().next()
@@ -34,7 +37,7 @@ while glyph is not None:
 	linep = p
 	for nxt in curg.itersiblings():
 		nxtuse = nxt.find('svg:use', nsm);
-		if nxtuse == None or xlhref not in nxtuse.attrib or not nxtuse.attrib[xlhref].startswith('#glyph'):
+		if nxtuse is None or xlhref not in nxtuse.attrib or not nxtuse.attrib[xlhref].startswith('#glyph'):
 			break;
 		pp = (float(nxtuse.attrib['x']), float(nxtuse.attrib['y']))
 		if abs(p[0]-pp[0]) + abs(p[1]-pp[1]) > options.dmax:
@@ -73,6 +76,6 @@ while glyph is not None:
 		group.append(w)
 
 	# Find the first unenveloped letter (that is, the next one)
-	glyph = tree.find('svg:g/svg:g/svg:use', nsm)
+	glyph = tree.find(search, nsm)
 
-tree.write(options.output)
+tree.write(sys.stdout if options.output == '-' else options.output)
