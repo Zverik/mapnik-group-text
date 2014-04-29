@@ -7,6 +7,7 @@ parser = argparse.ArgumentParser(description='Group letters in mapnik-generated 
 parser.add_argument('inp', type=argparse.FileType('r'), metavar='input', help='input svg file ("-" for stdin)')
 parser.add_argument('output', type=argparse.FileType('w'), help='output svg file (can be the same as input, default is stdout)', nargs='?', default=sys.stdout)
 parser.add_argument('-d', dest='dmax', type=int, help='maximum distance between glyph start points in a word (default=30)', default='30')
+parser.add_argument('-s', dest='single', action='store_true', help='do not attempt detecting multi-line labels')
 parser.add_argument('-v', dest='verbose', action='store_true', help='display debug information')
 options = parser.parse_args()
 
@@ -30,13 +31,17 @@ while glyph is not None:
 	word = [curg];
 	lcnt = 0 if glyph.attrib[xlhref] in spaces else 1
 	p = (float(glyph.attrib['x']), float(glyph.attrib['y']))
+	linep = p
 	for nxt in curg.itersiblings():
 		nxtuse = nxt.find('svg:use', nsm);
 		if nxtuse == None or xlhref not in nxtuse.attrib or not nxtuse.attrib[xlhref].startswith('#glyph'):
 			break;
 		pp = (float(nxtuse.attrib['x']), float(nxtuse.attrib['y']))
 		if abs(p[0]-pp[0]) + abs(p[1]-pp[1]) > options.dmax:
-			break;
+			# Maybe it's the next line
+			if options.single or abs(linep[0]-pp[0]) + abs(linep[1]-pp[1]) > options.dmax:
+				break;
+			linep = pp
 		p = pp
 		word.append(nxt);
 		if nxtuse.attrib[xlhref] not in spaces:
@@ -44,13 +49,16 @@ while glyph is not None:
 
 	# We have our word, now check for casing
 	casing = []
+	lcasing = 0
 	for path in curg.itersiblings(preceding=True):
 		if path.tag != '{%s}path'%nsm['svg'] or 'style' not in path.attrib or 'stroke-linecap:butt;stroke-linejoin:round;' not in path.attrib['style']:
 			break;
 		casing.insert(0, path)
-		if len(casing) == lcnt:
+		if path.attrib['d'] != '':
+			lcasing += 1
+		if lcasing == lcnt:
 			break;
-	if len(casing) < lcnt:
+	if lcasing < lcnt:
 		casing = []
 
 	if options.verbose:
