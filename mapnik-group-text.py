@@ -25,7 +25,7 @@ def parse_tree(tree, options):
 	spaces = set(spaces)
 
 	# Find the first letter
-	search = 'svg:g/svg:g/svg:use' if options['group'] else 'svg:g/svg:use'
+	search = 'svg:g/svg:g/svg:use[@x]' if options['group'] else 'svg:g/svg:use[@x]'
 	glyph = tree.find(search, nsm)
 	while glyph is not None:
 		# Find word starting with letter glyph
@@ -35,7 +35,7 @@ def parse_tree(tree, options):
 		p = (float(glyph.attrib['x']), float(glyph.attrib['y']))
 		linep = p
 		for nxt in curg.itersiblings():
-			nxtuse = nxt.find('svg:use', nsm);
+			nxtuse = nxt.find('svg:use[@x]', nsm);
 			if nxtuse is None or xlhref not in nxtuse.attrib or not nxtuse.attrib[xlhref].startswith('#glyph'):
 				break;
 			pp = (float(nxtuse.attrib['x']), float(nxtuse.attrib['y']))
