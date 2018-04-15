@@ -84,7 +84,7 @@ def parse_tree(tree, options):
 
 
 def process_stream(inp, out, options):
-    tree = etree.parse(inp)
+    tree = etree.parse(inp, parser=etree.XMLParser(huge_tree=True))
     inp.close()
     parse_tree(tree, options)
     tree.write(sys.stdout if out == '-' else out)
