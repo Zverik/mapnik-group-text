@@ -24,7 +24,7 @@ def parse_tree(tree, options):
     spaces = []
     for sympath in tree.findall('svg:defs/svg:g/svg:symbol/svg:path', nsm):
         if sympath.attrib['d'] == '':
-            spaces.append('#'+sympath.iterancestors().next().attrib['id'])
+            spaces.append('#'+next(sympath.iterancestors()).attrib['id'])
     spaces = set(spaces)
 
     # Find the first letter
@@ -32,7 +32,7 @@ def parse_tree(tree, options):
     glyph = tree.find(search, nsm)
     while glyph is not None:
         # Find word starting with letter glyph
-        curg = glyph.iterancestors().next()
+        curg = next(glyph.iterancestors())
         word = [curg]
         lcnt = 0 if glyph.attrib[xlhref] in spaces else 1
         p = (float(glyph.attrib['x']), float(glyph.attrib['y']))
