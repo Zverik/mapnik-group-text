@@ -69,7 +69,7 @@ def parse_tree(tree, options):
             casing = []
 
         if options['verbose']:
-            print glyph.attrib[xlhref], len(word), lcnt, len(casing)
+            print(glyph.attrib[xlhref], len(word), lcnt, len(casing))
 
         # Enclose casing and word in a group
         group = etree.Element('{%s}g' % nsm['svg'])
